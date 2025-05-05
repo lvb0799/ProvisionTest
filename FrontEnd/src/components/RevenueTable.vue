@@ -21,11 +21,11 @@
               <td class="Amount">{{ formatCurrency(item.revenueCurrentMonth) }}</td>
               <td class="Amount">{{ formatCurrency(item.revenueLastMonth) }}</td>
               <td class="Amount">{{ formatCurrency(item.revenueSameMonthLastYear) }}</td>
-              <td class="Amount">{{ formatPercent(item.moMChangePercent) }}</td>
-              <td class="Amount">{{ formatPercent(item.yoYChangePercent) }}</td>
+              <td class="Amount">{{ item.moMChangePercent }}</td>
+              <td class="Amount">{{ item.yoYChangePercent }}</td>
               <td class="Amount">{{ formatCurrency(item.accRevenueCurrent) }}</td>
               <td class="Amount">{{ formatCurrency(item.accRevenueLastYear) }}</td>
-              <td class="Amount">{{ formatPercent(item.accChangePercent) }}</td>
+              <td class="Amount">{{ item.accChangePercent }}</td>
               <td class="note">{{ item.note }}</td>
             </tr>
           </tbody>
@@ -34,11 +34,11 @@
       <!-- 分頁按鈕 -->
       <div class="pagination">
         <button @click="goToFirstPage" :disabled="currentPage === 1">第一頁</button>
-          <button @click="prevPage" :disabled="currentPage === 1">上一頁</button>
-          <span>第 {{ currentPage }} 頁 / 共 {{ totalPages }} 頁</span>
-          <button @click="nextPage" :disabled="currentPage === totalPages">下一頁</button>
-          <button @click="goToLastPage" :disabled="currentPage === totalPages">最後一頁</button>
-        </div>
+        <button @click="prevPage" :disabled="currentPage === 1">上一頁</button>
+        <span>第 {{ currentPage }} 頁 / 共 {{ totalPages }} 頁</span>
+        <button @click="nextPage" :disabled="currentPage === totalPages">下一頁</button>
+        <button @click="goToLastPage" :disabled="currentPage === totalPages">最後一頁</button>
+      </div>
     </div>
   </div>
 </template>
@@ -76,7 +76,14 @@ const headers = [
   '累計營收', '去年累計營收', '累計增率 (%)',
   '備註'
 ]
-
+const formattedData = computed(() => {
+  return revenues.value.map(item => ({
+    ...item,
+    moMChangePercent: formatPercent(item.moMChangePercent),
+    yoYChangePercent: formatPercent(item.yoYChangePercent),
+    accChangePercent: formatPercent(item.accChangePercent)
+  }))
+})
 const fetchRevenue = async () => {
   try {
     const res = await fetch('https://localhost:7243/api/MonthlyRevenue') // 替換為你的 API URL
@@ -89,7 +96,7 @@ const fetchRevenue = async () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   fetchRevenue()
 })
 
@@ -98,8 +105,8 @@ const totalCount = computed(() => revenues.value.length)
 const formatCurrency = (val) =>
   val != null ? Number(val).toLocaleString('zh-TW', { style: 'currency', currency: 'TWD' }) : '-'
 
-const formatPercent = (val) =>
-  val != null ? `${Math.round(val * 100) / 100}%` : '-'
+const formatPercent = computed((val) =>
+  val != null ? `${Math.round(val * 100) / 100}%` : '-')
 
 const formatToROCDate = (isoDateString) => {
   if (!isoDateString) return '-'
@@ -112,7 +119,6 @@ const formatToROCDate = (isoDateString) => {
 </script>
 
 <style scoped>
-
 table {
   width: 100%;
   border-collapse: collapse;
@@ -148,6 +154,7 @@ tbody tr:hover {
   /* 讓表格寬度撐開到所有欄位 */
   border-collapse: collapse;
 }
+
 .revenue-table td.Amount,
 .revenue-table th.Amount {
   text-align: right;
@@ -155,11 +162,14 @@ tbody tr:hover {
 
 .pagination {
   display: flex;
-  justify-content: center; /* 水平置中 */
+  justify-content: center;
+  /* 水平置中 */
   align-items: center;
-  gap: 12px;                /* 按鈕之間的間距 */
+  gap: 12px;
+  /* 按鈕之間的間距 */
   margin-top: 20px;
 }
+
 .pagination button {
   padding: 6px 12px;
   background-color: #4facfe;
@@ -167,7 +177,7 @@ tbody tr:hover {
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .pagination button:hover {
